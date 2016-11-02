@@ -23,6 +23,19 @@ public class Prodmapper {
 
     public static Map<String, ValueBinder> mValueBinderMapper = new LinkedHashMap<>();
 
+    public static Object transfroms(Object originSuperClassObject, Class<?> originClazz) {
+        BindType annotation = originClazz.getAnnotation(BindType.class);
+        String customProxyClassName = annotation.proxyClassName();
+        String originName = originClazz.getSimpleName();
+        String targetName = annotation.value().getSimpleName();
+
+        if (!customProxyClassName.equals("NONE")) {
+            String customProxyClassFullName = PACKAGE_NAME + "." + ParseUtils.parseCustomProxyClassName(customProxyClassName, originName, targetName);
+            return transfrom(originSuperClassObject, customProxyClassFullName);
+        }
+        return transfrom(originSuperClassObject, originName, targetName);
+    }
+
     public static Object transfrom(Object orginObject) {
         Class<?> orginObjectClass = orginObject.getClass();
         BindType annotation = orginObjectClass.getAnnotation(BindType.class);
@@ -56,9 +69,9 @@ public class Prodmapper {
             if (result == null) {
                 ValueBinder valueBinder = (ValueBinder) Class.forName(proxyClassFullName).newInstance();
                 mValueBinderMapper.put(proxyClassFullName, valueBinder);
-                return valueBinder.transform(originObject);
+                return valueBinder.transformInto(originObject);
             }
-            return result.transform(originObject);
+            return result.transformInto(originObject);
 //            Log.d(TAG, "BindClassName: " + valueBinder.getClass().getSimpleName());
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
